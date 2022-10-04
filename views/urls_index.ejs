@@ -20,22 +20,33 @@
         <tr>
           <th scope="col">Short URL ID</th>
           <th scope="col">Long URL</th>
+          <th scope="col">Edit</th>
+          <th scope="col">Delete</th>
         </tr>
       </thead>
       <tbody>
         <% for (let id in urls) { %>
           <tr>
             <td>
-              <%= id %>
+              <a href="/urls/<%= id %>"><%= id %></a> 
             </td>
             <td>
               <%= urls[id] %>
+            </td>
+            <td>
+              <form method="GET" action="/urls/<%= id %>">
+                <button type="submit" class="btn btn-outline-info">Edit</button>
+              </form>
+            <td>
+              <form method="POST" action="/urls/<%= id %>/delete">
+                <button type="submit" class="btn btn-outline-danger">Delete</button>
+              </form>
             </td>
           </tr>
           <% } %>
       </tbody>
     </table>
-    <a href="#"><h2>Shorten your URL here!</h2></a>
+    <a href="/urls/new"><h2>Shorten your URL here!</h2></a>
   </main>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
