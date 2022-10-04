@@ -23,13 +23,13 @@
       </div>
       <div>
       </div>
-      <div class="card-footer text-muted">
+      <div class="card-footer text-muted" style="display: flex; align-items: center; flex-direction: column;"">
         <h5 class="card-title">Edit</h5>
         <form class="form-inline" method="POST" action="/urls/<%= id %>">
-          <div class="form-group">
+          <div class="form-group mb-2">
               <label for="changeURLInput">New URL:</label>
               <input type="text" class="form-control" id="changeURLInput" name="updatedURL"
-                placeholder="http://" style="width: 1200px; margin: 1em">
+                placeholder="http://" style="width: 300px; margin: 1em">
               <button type="submit" class="btn btn-primary">Submit</button>
           </div>
         </form>

@@ -1,10 +1,12 @@
 const express = require("express");
+const cookieParser = require('cookie-parser')
 const app = express();
 const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser())
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -20,8 +22,30 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const username = req.cookies.username;
+  const templateVars = { urls: urlDatabase, username };
   res.render('urls_index', templateVars);
+});
+
+app.get("/urls/new", (req, res) => {
+  const templateVars = { username: req.cookies.username };
+  res.render("urls_new", templateVars);
+});
+
+app.get("/urls/:id", (req, res) => {
+  const id = req.params.id;
+  if (!urlDatabase[id]) {
+    res.redirect(404, "/urls");
+  }
+  const longURL = urlDatabase[id];
+  const templateVars = { id, longURL, username: req.cookies.username };
+  res.render("urls_show", templateVars);
+});
+
+app.get("/u/:id", (req, res) => {
+  const id = req.params.id;
+  const longURL = urlDatabase[id];
+  res.redirect(302, longURL);
 });
 
 app.post("/urls", (req, res) => {
@@ -31,18 +55,15 @@ app.post("/urls", (req, res) => {
   res.redirect(302,`urls/${id}`); 
 });
 
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+app.post("/login", (req, res) => {
+  const username = req.body.username;
+  res.cookie('username', username)
+    .redirect("/urls");
 });
 
-app.get("/urls/:id", (req, res) => {
-  const id = req.params.id;
-  if (!urlDatabase[id]) {
-    res.redirect(404, "/urls");
-  }
-  const longURL = urlDatabase[id];
-  const templateVars = { id, longURL };
-  res.render("urls_show", templateVars);
+app.post("/logout", (req, res) => {
+  res.clearCookie('username')
+    .redirect("/urls");
 });
 
 app.post("/urls/:id/delete", (req, res) => {
@@ -56,16 +77,6 @@ app.post("/urls/:id", (req, res) => {
   newURL = req.body.updatedURL;
   urlDatabase[id] = newURL;
   res.redirect("/urls");
-});
-
-app.get("/u/:id", (req, res) => {
-  const id = req.params.id;
-  const longURL = urlDatabase[id];
-  res.redirect(302, longURL);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 app.listen(PORT, () => {
