@@ -37,6 +37,9 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
+  if (!urlDatabase[id]) {
+    res.redirect(404, "/urls");
+  }
   const longURL = urlDatabase[id];
   const templateVars = { id, longURL };
   res.render("urls_show", templateVars);
