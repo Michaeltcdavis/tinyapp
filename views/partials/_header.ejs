@@ -10,16 +10,10 @@
         <a class="nav-item nav-link" style="display: flex; align-items: center;" href="/urls">My URLs</a>
         <a class="nav-item nav-link" style="display: flex; align-items: center;" href="/urls/new">Create New URL</a>
         <% if (!user) { %>
-        <form class="form-inline" method="POST" action="/login">
-          <div class="form-group">
-            <label for="login">Login:</label>
-            <input type="text" class="form-control" id="login" name="username" placeholder="username"
-              style="width: 300px; margin: 1em">
-            <button type="submit" class="btn btn-primary">Log me in!</button>
-          </div>
-        </form>
+          <a class="nav-item nav-link" style="display: flex; align-items: center;" href="/login">Login</a>
+          <a class="nav-item nav-link" style="display: flex; align-items: center;" href="/register">Register</a>
         <% } else { %>
-        <p style="display: flex; align-items: center;">Logged in as <%= user.email %></p>
+        <p class="nav-item" style="display: flex; align-items: center; margin: 0; padding-right: 8px;">Logged in as <%= user.email %></p>
         <form class="form-inline" method="POST" action="/logout">
           <div class="form-group">
             <button type="submit" class="btn btn-primary">Logout</button>
