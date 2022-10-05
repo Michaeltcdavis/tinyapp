@@ -9,7 +9,7 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" style="display: flex; align-items: center;" href="/urls">My URLs</a>
         <a class="nav-item nav-link" style="display: flex; align-items: center;" href="/urls/new">Create New URL</a>
-        <% if (!username) { %>
+        <% if (!user) { %>
         <form class="form-inline" method="POST" action="/login">
           <div class="form-group">
             <label for="login">Login:</label>
@@ -19,7 +19,7 @@
           </div>
         </form>
         <% } else { %>
-        <p style="display: flex; align-items: center;">Logged in as <%= username %></p>
+        <p style="display: flex; align-items: center;">Logged in as <%= user.email %></p>
         <form class="form-inline" method="POST" action="/logout">
           <div class="form-group">
             <button type="submit" class="btn btn-primary">Logout</button>
