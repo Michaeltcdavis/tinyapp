@@ -13,6 +13,15 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const lookupFromDatabase = function (key, value, database) {
+  for (let item in database) {
+    if (database[item][key] === value) {
+      return database[item];
+    }
+  }
+  return null;
+}
+
 const users = {
   userRandomID: {
     id: "userA",
@@ -73,7 +82,7 @@ app.post("/urls", (req, res) => {
   const id = generateRandomString(6);
   const longURL = req.body.longURL;
   urlDatabase[id] = longURL;
-  res.redirect(302,`urls/${id}`); 
+  res.redirect(302, `urls/${id}`);
 });
 
 app.post("/login", (req, res) => {
@@ -104,14 +113,18 @@ app.post("/register", (req, res) => {
   const username = req.body.username;
   const email = req.body.email;
   const password = req.body.password
+  if (!email || !password) {
+    res.status(400).send('must include email and password');
+    return;
+  }
+  console.log
+  if (lookupFromDatabase('email', email, users)) {
+    res.status(400).send('an account using this email already exists');
+    return;
+  }
   userID = generateRandomString(6)
-  users[userID] = {
-    username,
-    email,
-    password
-  };
+  users[userID] = { username, email, password };
   res.cookie('userID', userID)
-  console.log(users);
   res.redirect('/urls');
 });
 
