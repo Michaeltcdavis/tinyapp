@@ -31,7 +31,7 @@
               <%= id %>
             </td>
             <td>
-              <%= urls[id] %>
+              <%= urls[id].longURL %>
             </td>
             <td>
               <form method="GET" action="/urls/<%= id %>">
@@ -46,7 +46,7 @@
           <% } %>
       </tbody>
     </table>
-    <a href="/urls/new"><h2>Shorten your URL here!</h2></a>
+    <h4 class="text-center" style="margin-top: 15px"><%= message %></h4>
   </main>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
