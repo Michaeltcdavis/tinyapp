@@ -190,6 +190,7 @@ app.post("/logout", (req, res) => {
 
 app.post("/urls/:id/delete", (req, res) => {
   const userID = req.cookies.userID;
+  const id = req.params.id;
   if (!userID) {
     const message = 'You must login to delete short URLs.';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
@@ -202,13 +203,13 @@ app.post("/urls/:id/delete", (req, res) => {
     res.status(403).render("error", templateVars)
     return;
   }
-  const id = req.params.id;
   delete urlDatabase[id];
   res.redirect("/urls");
 });
 
 app.post("/urls/:id", (req, res) => {
   const userID = req.cookies.userID;
+  const id = req.params.id;
   if (!userID) {
     const message = 'You must login to modify URLs.';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
@@ -221,7 +222,6 @@ app.post("/urls/:id", (req, res) => {
     res.status(403).render("error", templateVars)
     return;
   }
-  const id = req.params.id;
   newURL = req.body.updatedURL;
   console.log(urlDatabase[id].longURL);
   urlDatabase[id].longURL = newURL;
