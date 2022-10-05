@@ -16,7 +16,7 @@ const urlDatabase = {
 const lookupFromDatabase = function (key, value, database) {
   for (let item in database) {
     if (database[item][key] === value) {
-      return database[item];
+      return item;
     }
   }
   return null;
@@ -72,6 +72,12 @@ app.get("/register", (req, res) => {
   res.render("register", templateVars);
 });
 
+app.get("/login", (req, res) => {
+  const userID = req.cookies.userID;
+  const templateVars = { urls: urlDatabase, user: users[userID] };
+  res.render("login", templateVars);
+});
+
 app.get("/u/:id", (req, res) => {
   const id = req.params.id;
   const longURL = urlDatabase[id];
@@ -83,12 +89,6 @@ app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
   urlDatabase[id] = longURL;
   res.redirect(302, `urls/${id}`);
-});
-
-app.post("/login", (req, res) => {
-  const username = req.body.username;
-  res.cookie('username', username)
-    .redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
@@ -117,13 +117,28 @@ app.post("/register", (req, res) => {
     res.status(400).send('must include email and password');
     return;
   }
-  console.log
   if (lookupFromDatabase('email', email, users)) {
     res.status(400).send('an account using this email already exists');
     return;
   }
   userID = generateRandomString(6)
   users[userID] = { username, email, password };
+  res.cookie('userID', userID)
+  res.redirect('/urls');
+});
+
+app.post("/login", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password
+  if (!email || !password) {
+    res.status(400).send('must include email and password');
+    return;
+  }
+  const userID = lookupFromDatabase('email', email, users);
+  if (!lookupFromDatabase('email', email, users) || users[userID].password !== password) {
+    res.status(404).send('This email and password combination is not recognized');
+    return;
+  }
   res.cookie('userID', userID)
   res.redirect('/urls');
 });
