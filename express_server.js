@@ -16,6 +16,10 @@ const urlDatabase = {
   i3BoGr: {
     longURL: "https://www.google.ca",
     userID: "aJ48lW",
+  }, 
+  i3Bo5r: {
+    longURL: "https://www.test.ca",
+    userID: "user2RandomID",
   },
 };
 
@@ -29,6 +33,11 @@ const users = {
     id: "userB",
     email: "b@example.com",
     password: "passwordB",
+  },
+  user3RandomID: {
+    id: "userC",
+    email: "c@example.com",
+    password: "passwordC",
   },
 };
 
@@ -50,17 +59,37 @@ const lookupFromDatabase = function (key, value, database) {
   return null;
 };
 
+const filterDatabase = function (key, value, database) {
+  const filtered = {};
+  let count = 0;
+  for (let item in database) {
+    if (database[item][key] === value) {
+      filtered[item] = database[item];
+      count++;
+   }
+  }
+  if (count > 0) {
+    return filtered;
+  }
+  return null;
+}
+
 app.get("/", (req, res) => {
   res.redirect("/urls");
 });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
 app.get("/urls", (req, res) => {
   const userID = req.cookies.userID;
-  const templateVars = { urls: urlDatabase, user: users[userID] };
+  let urls = filterDatabase('userID', userID, urlDatabase);
+  let message = '';
+  if (!urls) {
+    message = 'You have no short URLs yet!'
+  }
+  if (!userID) {
+    urls = null;
+    message = 'Login to see your short URLs!'
+  }
+  const templateVars = { urls, user: users[userID], message };
   res.render('urls_index', templateVars);
 });
 
@@ -84,10 +113,18 @@ app.get("/urls/:id", (req, res) => {
     return;
   }
   if (!userID) {
-    res.redirect("/login");
+    const message = 'you need to be logged in to access this page.';
+    const templateVars = { message, urls: urlDatabase, user: users[userID] };
+    res.status(403).render("error", templateVars)
     return;
   }
-  const longURL = urlDatabase[id];
+  if (userID !== urlDatabase[id].userID) {
+    const message = 'Users can only modify their own URLs.';
+    const templateVars = { message, urls: urlDatabase, user: users[userID] };
+    res.status(403).render("error", templateVars)
+    return;
+  }
+  const longURL = urlDatabase[id].longURL;
   const templateVars = { id, longURL, user: users[userID] };
   res.render("urls_show", templateVars);
 });
@@ -118,7 +155,7 @@ app.get("/u/:id", (req, res) => {
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
     res.render("error", templateVars)
   }
-  const longURL = urlDatabase[id];
+  const longURL = urlDatabase[id].longURL;
   res.redirect(longURL);
 
 });
@@ -133,7 +170,9 @@ app.post("/urls", (req, res) => {
   }
   const id = generateRandomString(6);
   const longURL = req.body.longURL;
-  urlDatabase[id] = longURL;
+  urlDatabase[id] = {};
+  urlDatabase[id].longURL = longURL;
+  urlDatabase[id].userID = userID;
   res.redirect(302, `urls/${id}`);
 });
 
@@ -157,6 +196,12 @@ app.post("/urls/:id/delete", (req, res) => {
     res.status(403).render("error", templateVars);
     return;
   }
+  if (userID !== urlDatabase[id].userID) {
+    const message = 'Users can only delete their own URLs.';
+    const templateVars = { message, urls: urlDatabase, user: users[userID] };
+    res.status(403).render("error", templateVars)
+    return;
+  }
   const id = req.params.id;
   delete urlDatabase[id];
   res.redirect("/urls");
@@ -170,9 +215,16 @@ app.post("/urls/:id", (req, res) => {
     res.status(403).render("error", templateVars);
     return;
   }
+  if (userID !== urlDatabase[id].userID) {
+    const message = 'Users can only modify their own short URLs.';
+    const templateVars = { message, urls: urlDatabase, user: users[userID] };
+    res.status(403).render("error", templateVars)
+    return;
+  }
   const id = req.params.id;
   newURL = req.body.updatedURL;
-  urlDatabase[id] = newURL;
+  console.log(urlDatabase[id].longURL);
+  urlDatabase[id].longURL = newURL;
   res.redirect("/urls");
 });
 
