@@ -3,7 +3,7 @@ const cookieSession = require("cookie-session");
 const bcrypt = require('bcryptjs');
 const lookupFromDatabase = require('./helpers');
 const app = express();
-const PORT = 8080; // default port 8080
+const PORT = 8080;
 
 app.set("view engine", "ejs");
 app.set('trust proxy', 1);
@@ -14,47 +14,9 @@ app.use(cookieSession({
   maxAge: 86400000
 }));
 
-const urlDatabase = {
-  b6UTxQ: {
-    longURL: "https://www.tsn.ca",
-    userID: "aJ48lW",
-    dateCreated: '2019-04-05',
-    timesVisited: 4,
-    uniqueVisits: 1,
-  },
-  i3BoGr: {
-    longURL: "https://www.google.ca",
-    userID: "aJ48lW",
-    dateCreated: '2020-03-12',
-    timesVisited: 4,
-    uniqueVisits: 2,
-  },
-  i3Bo5r: {
-    longURL: "https://www.test.ca",
-    userID: "user2RandomID",
-    dateCreated: '1970-01-01',
-    timesVisited: 4,
-    uniqueVisits: 3
-  },
-};
+const urlDatabase = {};
 
-const users = {
-  aJ48lW: {
-    id: "userA",
-    email: "a@example.com",
-    password: "passwordA",
-  },
-  user2RandomID: {
-    id: "userB",
-    email: "b@example.com",
-    password: "passwordB",
-  },
-  user3RandomID: {
-    id: "userC",
-    email: "c@example.com",
-    password: "passwordC",
-  },
-};
+const users = {};
 
 const generateRandomString = function(lengthOfString) {
   const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
