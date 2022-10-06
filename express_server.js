@@ -12,14 +12,23 @@ const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
     userID: "aJ48lW",
+    dateCreated: 2019-04-05,
+    timesVisited: 4,
+    uniqueVisits: ['ip1',' ip2', 'ip3']
   },
   i3BoGr: {
     longURL: "https://www.google.ca",
     userID: "aJ48lW",
+    dateCreated: 2020-03-12,
+    timesVisited: 4,
+    uniqueVisits: ['ip1']
   }, 
   i3Bo5r: {
     longURL: "https://www.test.ca",
     userID: "user2RandomID",
+    dateCreated: 1970-01-01,
+    timesVisited: 4,
+    uniqueVisits: ['ip1', 'ip2']
   },
 };
 
@@ -72,6 +81,13 @@ const filterDatabase = function (key, value, database) {
     return filtered;
   }
   return null;
+}
+
+const formatDate = function (date) {
+  year = date.getFullYear();
+  month = String(date.getMonth() + 1).padStart(2, '0');
+  day = String(date.getDate()).padStart(2, '0');
+  return year + '-' + month + '-' + day;
 }
 
 app.get("/", (req, res) => {
@@ -155,6 +171,11 @@ app.get("/u/:id", (req, res) => {
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
     res.render("error", templateVars)
   }
+  urlDatabase[id].timesVisited++;
+  const ip = req.ip;
+  if (!urlDatabase[id].uniqueVisits.includes(ip)) {
+    urlDatabase[id].uniqueVisits.push(ip);
+  }
   const longURL = urlDatabase[id].longURL;
   res.redirect(longURL);
 
@@ -170,10 +191,14 @@ app.post("/urls", (req, res) => {
   }
   const id = generateRandomString(6);
   const longURL = req.body.longURL;
+  const date = formatDate(new Date());
   urlDatabase[id] = {};
   urlDatabase[id].longURL = longURL;
   urlDatabase[id].userID = userID;
-  res.redirect(302, `urls/${id}`);
+  urlDatabase[id].dateCreated = date;
+  urlDatabase[id].timesVisited= 0;
+  urlDatabase[id].uniqueVisits = [];
+  res.redirect(`urls/${id}`);
 });
 
 app.post("/logout", (req, res) => {
