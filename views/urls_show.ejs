@@ -13,7 +13,7 @@
     <div class="card text-center">
       <div class="card-header"></div>
       <div class="card-body">
-        <h5 class="card-title">TinyURL for: <%= longURL %>
+        <h5 class="card-title">TinyURL for: <%= url.longURL %>
         </h5>
         <p class="card-text">
           Short URL ID: <a href="/u/<%= id %>">
@@ -21,16 +21,37 @@
           </a>
         </p>
       </div>
-      <div>
-      </div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Date Created</th>
+            <th scope="col">Number of Visits</th>
+            <th scope="col">Unique Visits</th>
+
+          </tr>
+        </thead>
+        <tbody>
+            <tr>
+              <td>
+                <%= url.dateCreated %>
+              </td>
+              <td>
+                <%= url.timesVisited %>
+              </td>
+              <td>
+                <%= url.uniqueVisits.length %>
+              </td>
+            </tr>
+        </tbody>
+      </table>
       <div class="card-footer text-muted" style="display: flex; align-items: center; flex-direction: column;"">
-        <h5 class="card-title">Edit</h5>
+        <h5 class=" card-title">Edit</h5>
         <form class="form-inline" method="POST" action="/urls/<%= id %>">
           <div class="form-group mb-2">
-              <label for="changeURLInput">New URL:</label>
-              <input type="text" class="form-control" id="changeURLInput" name="updatedURL"
-                placeholder="http://" style="width: 300px; margin: 1em">
-              <button type="submit" class="btn btn-primary">Submit</button>
+            <label for="changeURLInput">New URL:</label>
+            <input type="text" class="form-control" id="changeURLInput" name="updatedURL" placeholder="http://"
+              style="width: 300px; margin: 1em">
+            <button type="submit" class="btn btn-primary">Submit</button>
           </div>
         </form>
       </div>

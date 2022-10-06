@@ -12,21 +12,21 @@ const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
     userID: "aJ48lW",
-    dateCreated: 2019-04-05,
+    dateCreated: '2019-04-05',
     timesVisited: 4,
     uniqueVisits: ['ip1',' ip2', 'ip3']
   },
   i3BoGr: {
     longURL: "https://www.google.ca",
     userID: "aJ48lW",
-    dateCreated: 2020-03-12,
+    dateCreated: '2020-03-12',
     timesVisited: 4,
     uniqueVisits: ['ip1']
   }, 
   i3Bo5r: {
     longURL: "https://www.test.ca",
     userID: "user2RandomID",
-    dateCreated: 1970-01-01,
+    dateCreated: '1970-01-01',
     timesVisited: 4,
     uniqueVisits: ['ip1', 'ip2']
   },
@@ -91,6 +91,11 @@ const formatDate = function (date) {
 }
 
 app.get("/", (req, res) => {
+  const userID = req.cookies.userID;
+  if (!userID) {
+    res.redirect("/login");
+    return;
+  }
   res.redirect("/urls");
 });
 
@@ -140,8 +145,8 @@ app.get("/urls/:id", (req, res) => {
     res.status(403).render("error", templateVars)
     return;
   }
-  const longURL = urlDatabase[id].longURL;
-  const templateVars = { id, longURL, user: users[userID] };
+  const url = urlDatabase[id];
+  const templateVars = { id, url, user: users[userID] };
   res.render("urls_show", templateVars);
 });
 
@@ -189,8 +194,14 @@ app.post("/urls", (req, res) => {
     res.status(404).render("error", templateVars)
     return;
   }
-  const id = generateRandomString(6);
   const longURL = req.body.longURL;
+  if (!req.body.longURL.startsWith("http://") && !req.body.longURL.startsWith("https://")) {
+    const message = 'URLs must start with "http://" or "https://".';
+    const templateVars = { message, urls: urlDatabase, user: users[userID] };
+    res.status(403).render("error", templateVars)
+    return;
+  }
+  const id = generateRandomString(6);
   const date = formatDate(new Date());
   urlDatabase[id] = {};
   urlDatabase[id].longURL = longURL;
