@@ -2,7 +2,7 @@ const express = require("express");
 const cookieSession = require("cookie-session");
 //const cookieParser = require('cookie-parser'); //REMOVED
 const bcrypt = require('bcryptjs');
-const lookupFromDatabase = require('./helper');
+const lookupFromDatabase = require('./helpers');
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -22,21 +22,21 @@ const urlDatabase = {
     userID: "aJ48lW",
     dateCreated: '2019-04-05',
     timesVisited: 4,
-    uniqueVisits: ['ip1',' ip2', 'ip3']
+    uniqueVisits: 1,
   },
   i3BoGr: {
     longURL: "https://www.google.ca",
     userID: "aJ48lW",
     dateCreated: '2020-03-12',
     timesVisited: 4,
-    uniqueVisits: ['ip1']
+    uniqueVisits: 2,
   }, 
   i3Bo5r: {
     longURL: "https://www.test.ca",
     userID: "user2RandomID",
     dateCreated: '1970-01-01',
     timesVisited: 4,
-    uniqueVisits: ['ip1', 'ip2']
+    uniqueVisits: 3
   },
 };
 
@@ -66,15 +66,6 @@ const generateRandomString = function (lengthOfString) {
   }
   return randomString;
 };
-
-// const lookupFromDatabase = function (key, value, database) {
-//   for (let item in database) {
-//     if (database[item][key] === value) {
-//       return item;
-//     }
-//   }
-//   return null;
-// };
 
 const filterDatabase = function (key, value, database) {
   const filtered = {};
@@ -185,9 +176,9 @@ app.get("/u/:id", (req, res) => {
     res.render("error", templateVars)
   }
   urlDatabase[id].timesVisited++;
-  const ip = req.ip;
-  if (!urlDatabase[id].uniqueVisits.includes(ip)) {
-    urlDatabase[id].uniqueVisits.push(ip);
+  if (!req.session[id]) {
+    urlDatabase[id].uniqueVisits++;
+    req.session[id] = id;
   }
   const longURL = urlDatabase[id].longURL;
   res.redirect(longURL);
@@ -215,7 +206,7 @@ app.post("/urls", (req, res) => {
   urlDatabase[id].userID = userID;
   urlDatabase[id].dateCreated = date;
   urlDatabase[id].timesVisited= 0;
-  urlDatabase[id].uniqueVisits = [];
+  urlDatabase[id].uniqueVisits = 0;
   res.redirect(`urls/${id}`);
 });
 
