@@ -8,8 +8,13 @@ TinyApp will keep track of how many times the link is clicked and how many times
 
 ## Final Product
 
+### Registration Page
 !["Registration Page"](/Photos/RegisterPage.png?raw=true "Registration Page")
+
+### My URLs Page
 !["My URLs Page"](/Photos/myURLs.png?raw=true "My URLs Page")
+
+### Edit URL Page
 !["Edit URL Page"](/Photos/editURL.png?raw=true "Edit URL Page")
 
 ## Dependencies
