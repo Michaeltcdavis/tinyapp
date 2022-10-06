@@ -1,13 +1,20 @@
 const express = require("express");
-const cookieParser = require('cookie-parser');
+const cookieSession = require("cookie-session");
+//const cookieParser = require('cookie-parser'); //REMOVED
 const bcrypt = require('bcryptjs');
+const lookupFromDatabase = require('./helper');
 const app = express();
 const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
+app.set('trust proxy', 1)
 
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(cookieSession({
+  keys: ['egrfd', 'aergerbb'],
+  maxAge: 86400000
+}))
+//app.use(cookieParser()); //REMOVED
 
 const urlDatabase = {
   b6UTxQ: {
@@ -60,14 +67,14 @@ const generateRandomString = function (lengthOfString) {
   return randomString;
 };
 
-const lookupFromDatabase = function (key, value, database) {
-  for (let item in database) {
-    if (database[item][key] === value) {
-      return item;
-    }
-  }
-  return null;
-};
+// const lookupFromDatabase = function (key, value, database) {
+//   for (let item in database) {
+//     if (database[item][key] === value) {
+//       return item;
+//     }
+//   }
+//   return null;
+// };
 
 const filterDatabase = function (key, value, database) {
   const filtered = {};
@@ -92,7 +99,7 @@ const formatDate = function (date) {
 };
 
 app.get("/", (req, res) => {
-  const userID = req.cookies.userID;
+  const userID = req.session.user_id;
   if (!userID) {
     res.redirect("/login");
     return;
@@ -101,7 +108,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const userID = req.cookies.userID;
+  const userID = req.session.user_id;
   let urls = filterDatabase('userID', userID, urlDatabase);
   let message = '';
   if (!urls) {
@@ -116,7 +123,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const userID = req.cookies.userID;
+  const userID = req.session.user_id;
   if (!userID) {
     res.redirect("/login");
     return;
@@ -127,7 +134,7 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
-  const userID = req.cookies.userID;
+  const userID = req.session.user_id;
   if (!urlDatabase[id]) {
     const message = 'No URL was found to be referenced by that short URL.';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
@@ -152,7 +159,7 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const userID = req.cookies.userID;
+  const userID = req.session.user_id;
   if (userID) {
     res.redirect("/urls");
   }
@@ -161,7 +168,7 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  const userID = req.cookies.userID;
+  const userID = req.session.user_id;
   if (userID) {
     res.redirect("/urls");
   }
@@ -171,7 +178,7 @@ app.get("/login", (req, res) => {
 
 app.get("/u/:id", (req, res) => {
   const id = req.params.id;
-  const userID = req.cookies.userID;
+  const userID = req.session.user_id;
   if (!urlDatabase[id]) {
     const message = 'No URL was found to be referenced by that short URL.';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
@@ -187,7 +194,7 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const userID = req.cookies.userID;
+  const userID = req.session.user_id;
   if (!userID) {
     const message = 'You must login to shorten URLs.';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
@@ -213,19 +220,19 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  const userID = req.cookies.userID;
+  const userID = req.session.user_id;
   if (!userID) {
     const message = 'You must login to logout.';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
     res.status(403).render("error", templateVars);
     return;
   }
-  res.clearCookie('userID')
-    .redirect("/urls");
+  req.session.user_id = null;
+  res.redirect("/urls");
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  const userID = req.cookies.userID;
+  const userID = req.session.user_id;
   const id = req.params.id;
   if (!userID) {
     const message = 'You must login to delete short URLs.';
@@ -244,7 +251,7 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  const userID = req.cookies.userID;
+  const userID = req.session.user_id;
   const id = req.params.id;
   if (!userID) {
     const message = 'You must login to modify URLs.';
@@ -259,7 +266,6 @@ app.post("/urls/:id", (req, res) => {
     return;
   }
   newURL = req.body.updatedURL;
-  console.log(urlDatabase[id].longURL);
   urlDatabase[id].longURL = newURL;
   res.redirect("/urls");
 });
@@ -267,25 +273,25 @@ app.post("/urls/:id", (req, res) => {
 app.post("/register", (req, res) => {
   const username = req.body.username;
   const email = req.body.email;
-  const password = bcrypt.hashSync(req.body.password, 10);
+  let password = req.body.password;
   if (!email || !password) {
-    const userID = req.cookies.userID;
+    const userID = req.session.user_id;
     const message = 'You must include email and password.';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
     res.status(400).render("error", templateVars);
     return;
   }
   if (lookupFromDatabase('email', email, users)) {
-    const userID = req.cookies.userID;
+    const userID = req.session.user_id;
     const message = 'An account using this email already exists.';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
     res.status(400).render("error", templateVars);
     return;
   }
+  password = bcrypt.hashSync(req.body.password, 10);
   userID = generateRandomString(6)
   users[userID] = { username, email, password };
-  console.log(users[userID]);
-  res.cookie('userID', userID);
+  req.session.user_id = userID;
   res.redirect('/urls');
 });
 
@@ -293,24 +299,21 @@ app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   if (!email || !password) {
-    const userID = req.cookies.userID;
+    const userID = req.session.user_id;
     const message = 'You must include email and password.';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
     res.status(400).render("error", templateVars);
     return;
   }
   const userID = lookupFromDatabase('email', email, users);
-  console.log(bcrypt.compareSync(password, users[userID].password))
-  console.log(password);
-  console.log(users[userID].password);
   if (!lookupFromDatabase('email', email, users) || (bcrypt.compareSync(password, users[userID].password) === false)) {
-    const userID = req.cookies.userID;
+    const userID = req.session.user_id;
     const message = 'This email and password combination is not recognized.';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
     res.status(404).render("error", templateVars);
     return;
   }
-  res.cookie('userID', userID)
+  req.session.user_id = userID;
   res.redirect('/urls');
 });
 
