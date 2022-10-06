@@ -1,12 +1,13 @@
 const express = require("express");
-const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser())
+app.use(cookieParser());
 
 const urlDatabase = {
   b6UTxQ: {
@@ -75,20 +76,20 @@ const filterDatabase = function (key, value, database) {
     if (database[item][key] === value) {
       filtered[item] = database[item];
       count++;
-   }
+    }
   }
   if (count > 0) {
     return filtered;
   }
   return null;
-}
+};
 
 const formatDate = function (date) {
   year = date.getFullYear();
   month = String(date.getMonth() + 1).padStart(2, '0');
   day = String(date.getDate()).padStart(2, '0');
   return year + '-' + month + '-' + day;
-}
+};
 
 app.get("/", (req, res) => {
   const userID = req.cookies.userID;
@@ -183,7 +184,6 @@ app.get("/u/:id", (req, res) => {
   }
   const longURL = urlDatabase[id].longURL;
   res.redirect(longURL);
-
 });
 
 app.post("/urls", (req, res) => {
@@ -236,7 +236,7 @@ app.post("/urls/:id/delete", (req, res) => {
   if (userID !== urlDatabase[id].userID) {
     const message = 'Users can only delete their own URLs.';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
-    res.status(403).render("error", templateVars)
+    res.status(403).render("error", templateVars);
     return;
   }
   delete urlDatabase[id];
@@ -255,7 +255,7 @@ app.post("/urls/:id", (req, res) => {
   if (userID !== urlDatabase[id].userID) {
     const message = 'Users can only modify their own short URLs.';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
-    res.status(403).render("error", templateVars)
+    res.status(403).render("error", templateVars);
     return;
   }
   newURL = req.body.updatedURL;
@@ -267,7 +267,7 @@ app.post("/urls/:id", (req, res) => {
 app.post("/register", (req, res) => {
   const username = req.body.username;
   const email = req.body.email;
-  const password = req.body.password;
+  const password = bcrypt.hashSync(req.body.password, 10);
   if (!email || !password) {
     const userID = req.cookies.userID;
     const message = 'You must include email and password.';
@@ -284,7 +284,8 @@ app.post("/register", (req, res) => {
   }
   userID = generateRandomString(6)
   users[userID] = { username, email, password };
-  res.cookie('userID', userID)
+  console.log(users[userID]);
+  res.cookie('userID', userID);
   res.redirect('/urls');
 });
 
@@ -299,7 +300,10 @@ app.post("/login", (req, res) => {
     return;
   }
   const userID = lookupFromDatabase('email', email, users);
-  if (!lookupFromDatabase('email', email, users) || users[userID].password !== password) {
+  console.log(bcrypt.compareSync(password, users[userID].password))
+  console.log(password);
+  console.log(users[userID].password);
+  if (!lookupFromDatabase('email', email, users) || (bcrypt.compareSync(password, users[userID].password) === false)) {
     const userID = req.cookies.userID;
     const message = 'This email and password combination is not recognized.';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
