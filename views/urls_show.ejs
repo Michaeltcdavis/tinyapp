@@ -27,7 +27,7 @@
             <th scope="col">Date Created</th>
             <th scope="col">Number of Visits</th>
             <th scope="col">Unique Visits</th>
-
+            <th scope=""col>Delete URL</th>
           </tr>
         </thead>
         <tbody>
@@ -39,7 +39,12 @@
                 <%= url.timesVisited %>
               </td>
               <td>
-                <%= url.uniqueVisits.length %>
+                <%= url.uniqueVisits %>
+              </td>
+              <td>
+                <form method="POST" action="/urls/<%= id %>/delete">
+                  <button type="submit" class="btn btn-outline-danger">Delete</button>
+                </form>
               </td>
             </tr>
         </tbody>

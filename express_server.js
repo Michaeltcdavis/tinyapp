@@ -1,20 +1,18 @@
 const express = require("express");
 const cookieSession = require("cookie-session");
-//const cookieParser = require('cookie-parser'); //REMOVED
 const bcrypt = require('bcryptjs');
 const lookupFromDatabase = require('./helpers');
 const app = express();
 const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
-app.set('trust proxy', 1)
+app.set('trust proxy', 1);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieSession({
   keys: ['egrfd', 'aergerbb'],
   maxAge: 86400000
-}))
-//app.use(cookieParser()); //REMOVED
+}));
 
 const urlDatabase = {
   b6UTxQ: {
@@ -30,7 +28,7 @@ const urlDatabase = {
     dateCreated: '2020-03-12',
     timesVisited: 4,
     uniqueVisits: 2,
-  }, 
+  },
   i3Bo5r: {
     longURL: "https://www.test.ca",
     userID: "user2RandomID",
@@ -58,16 +56,16 @@ const users = {
   },
 };
 
-const generateRandomString = function (lengthOfString) {
+const generateRandomString = function(lengthOfString) {
   const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   let randomString = '';
-  for (i = 0; i < lengthOfString; i++) {
+  for (let i = 0; i < lengthOfString; i++) {
     randomString += chars[Math.floor(Math.random() * 62)];
   }
   return randomString;
 };
 
-const filterDatabase = function (key, value, database) {
+const filterDatabase = function(key, value, database) {
   const filtered = {};
   let count = 0;
   for (let item in database) {
@@ -82,10 +80,10 @@ const filterDatabase = function (key, value, database) {
   return null;
 };
 
-const formatDate = function (date) {
-  year = date.getFullYear();
-  month = String(date.getMonth() + 1).padStart(2, '0');
-  day = String(date.getDate()).padStart(2, '0');
+const formatDate = function(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
   return year + '-' + month + '-' + day;
 };
 
@@ -103,11 +101,11 @@ app.get("/urls", (req, res) => {
   let urls = filterDatabase('userID', userID, urlDatabase);
   let message = '';
   if (!urls) {
-    message = 'You have no short URLs yet!'
+    message = 'You have no short URLs yet!';
   }
   if (!userID) {
     urls = null;
-    message = 'Login to see your short URLs!'
+    message = 'Login to see your short URLs!';
   }
   const templateVars = { urls, user: users[userID], message };
   res.render('urls_index', templateVars);
@@ -129,19 +127,19 @@ app.get("/urls/:id", (req, res) => {
   if (!urlDatabase[id]) {
     const message = 'No URL was found to be referenced by that short URL.';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
-    res.status(404).render("error", templateVars)
+    res.status(404).render("error", templateVars);
     return;
   }
   if (!userID) {
     const message = 'you need to be logged in to access this page.';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
-    res.status(403).render("error", templateVars)
+    res.status(403).render("error", templateVars);
     return;
   }
   if (userID !== urlDatabase[id].userID) {
     const message = 'Users can only modify their own URLs.';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
-    res.status(403).render("error", templateVars)
+    res.status(403).render("error", templateVars);
     return;
   }
   const url = urlDatabase[id];
@@ -150,18 +148,27 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const userID = req.session.user_id;
+  let userID = 0;
+  if (lookupFromDatabase('id', req.session.user_id, users)) {
+    userID = req.session.user_id;
+  }
   if (userID) {
+    console.log('test, ',userID);
     res.redirect("/urls");
+    return;
   }
   const templateVars = { urls: urlDatabase, user: users[userID] };
   res.render("register", templateVars);
 });
 
 app.get("/login", (req, res) => {
-  const userID = req.session.user_id;
+  let userID = 0;
+  if (lookupFromDatabase('id', req.session.user_id, users)) {
+    userID = req.session.user_id;
+  }
   if (userID) {
     res.redirect("/urls");
+    return;
   }
   const templateVars = { urls: urlDatabase, user: users[userID] };
   res.render("login", templateVars);
@@ -173,7 +180,7 @@ app.get("/u/:id", (req, res) => {
   if (!urlDatabase[id]) {
     const message = 'No URL was found to be referenced by that short URL.';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
-    res.render("error", templateVars)
+    res.render("error", templateVars);
   }
   urlDatabase[id].timesVisited++;
   if (!req.session[id]) {
@@ -189,14 +196,14 @@ app.post("/urls", (req, res) => {
   if (!userID) {
     const message = 'You must login to shorten URLs.';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
-    res.status(404).render("error", templateVars)
+    res.status(404).render("error", templateVars);
     return;
   }
   const longURL = req.body.longURL;
   if (!req.body.longURL.startsWith("http://") && !req.body.longURL.startsWith("https://")) {
     const message = 'URLs must start with "http://" or "https://".';
     const templateVars = { message, urls: urlDatabase, user: users[userID] };
-    res.status(403).render("error", templateVars)
+    res.status(403).render("error", templateVars);
     return;
   }
   const id = generateRandomString(6);
@@ -205,7 +212,7 @@ app.post("/urls", (req, res) => {
   urlDatabase[id].longURL = longURL;
   urlDatabase[id].userID = userID;
   urlDatabase[id].dateCreated = date;
-  urlDatabase[id].timesVisited= 0;
+  urlDatabase[id].timesVisited = 0;
   urlDatabase[id].uniqueVisits = 0;
   res.redirect(`urls/${id}`);
 });
@@ -256,7 +263,7 @@ app.post("/urls/:id", (req, res) => {
     res.status(403).render("error", templateVars);
     return;
   }
-  newURL = req.body.updatedURL;
+  const newURL = req.body.updatedURL;
   urlDatabase[id].longURL = newURL;
   res.redirect("/urls");
 });
@@ -280,7 +287,7 @@ app.post("/register", (req, res) => {
     return;
   }
   password = bcrypt.hashSync(req.body.password, 10);
-  userID = generateRandomString(6)
+  const userID = generateRandomString(6);
   users[userID] = { username, email, password };
   req.session.user_id = userID;
   res.redirect('/urls');
