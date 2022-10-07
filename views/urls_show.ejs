@@ -42,7 +42,7 @@
                 <%= url.uniqueVisits %>
               </td>
               <td>
-                <form method="POST" action="/urls/<%= id %>/delete">
+                <form method="POST" action="/urls/<%= id %>?_method=DELETE">
                   <button type="submit" class="btn btn-outline-danger">Delete</button>
                 </form>
               </td>
@@ -51,7 +51,7 @@
       </table>
       <div class="card-footer text-muted" style="display: flex; align-items: center; flex-direction: column;"">
         <h5 class=" card-title">Edit</h5>
-        <form class="form-inline" method="POST" action="/urls/<%= id %>">
+        <form class="form-inline" method="POST" action="/urls/<%= id %>?_method=PUT">
           <div class="form-group mb-2">
             <label for="changeURLInput">New URL:</label>
             <input type="text" class="form-control" id="changeURLInput" name="updatedURL" placeholder="http://"
