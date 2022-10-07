@@ -1,10 +1,12 @@
 # TinyApp Project
 
-TinyApp is a full stack web application built with Node and Express that allows users to shorten long URLs (à la bit.ly).
+TinyApp is a full stack REST web application built with Node and Express that allows users to shorten long URLs (à la bit.ly).
 
 Users can save their own list of short URLs and provide the links to others online.
 
 TinyApp will keep track of how many times the link is clicked and how many times the link is clicked by a unique user (so no cheating).
+
+Tiny app stores encrypted passwords with bcrypt and uses encrypted cookies with cookie-session for a secure URL shortening experience, so you can REST easy!
 
 ## Final Product
 
@@ -24,6 +26,7 @@ TinyApp will keep track of how many times the link is clicked and how many times
 - EJS
 - bcryptjs
 - cookie-session
+- method-override
 
 ## Getting Started
 
