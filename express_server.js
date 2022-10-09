@@ -2,7 +2,7 @@ const express = require("express");
 const methodOverride = require('method-override')
 const cookieSession = require("cookie-session");
 const bcrypt = require('bcryptjs');
-const lookupFromDatabase = require('./helpers');
+const { lookupFromDatabase, generateRandomString, filterDatabase, formatDate } = require('./helpers');
 const app = express();
 const PORT = 8080;
 
@@ -20,37 +20,7 @@ const urlDatabase = {};
 
 const users = {};
 
-const generateRandomString = function(lengthOfString) {
-  const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  let randomString = '';
-  for (let i = 0; i < lengthOfString; i++) {
-    randomString += chars[Math.floor(Math.random() * 62)];
-  }
-  return randomString;
-};
-
-const filterDatabase = function(key, value, database) {
-  const filtered = {};
-  let count = 0;
-  for (let item in database) {
-    if (database[item][key] === value) {
-      filtered[item] = database[item];
-      count++;
-    }
-  }
-  if (count > 0) {
-    return filtered;
-  }
-  return null;
-};
-
-const formatDate = function(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return year + '-' + month + '-' + day;
-};
-
+//BROWSE
 app.get("/", (req, res) => {
   const userID = req.session.user_id;
   if (!userID) {
@@ -59,7 +29,7 @@ app.get("/", (req, res) => {
   }
   res.redirect("/urls");
 });
-
+//READ
 app.get("/urls", (req, res) => {
   const userID = req.session.user_id;
   let urls = filterDatabase('userID', userID, urlDatabase);
@@ -74,7 +44,7 @@ app.get("/urls", (req, res) => {
   const templateVars = { urls, user: users[userID], message };
   res.render('urls_index', templateVars);
 });
-
+//READ
 app.get("/urls/new", (req, res) => {
   const userID = req.session.user_id;
   if (!userID) {
@@ -84,7 +54,7 @@ app.get("/urls/new", (req, res) => {
   const templateVars = { user: users[userID] };
   res.render("urls_new", templateVars);
 });
-
+//READ
 app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
   const userID = req.session.user_id;
@@ -110,7 +80,7 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = { id, url, user: users[userID] };
   res.render("urls_show", templateVars);
 });
-
+//READ
 app.get("/register", (req, res) => {
   let userID = 0;
   if (lookupFromDatabase('id', req.session.user_id, users)) {
@@ -124,7 +94,7 @@ app.get("/register", (req, res) => {
   const templateVars = { urls: urlDatabase, user: users[userID] };
   res.render("register", templateVars);
 });
-
+//READ
 app.get("/login", (req, res) => {
   let userID = 0;
   if (lookupFromDatabase('id', req.session.user_id, users)) {
@@ -138,6 +108,7 @@ app.get("/login", (req, res) => {
   res.render("login", templateVars);
 });
 
+//READ
 app.get("/u/:id", (req, res) => {
   const id = req.params.id;
   const userID = req.session.user_id;
@@ -155,6 +126,7 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
+//ADD
 app.post("/urls", (req, res) => {
   const userID = req.session.user_id;
   if (!userID) {
@@ -181,6 +153,7 @@ app.post("/urls", (req, res) => {
   res.redirect(`urls/${id}`);
 });
 
+//EDIT
 app.post("/logout", (req, res) => {
   const userID = req.session.user_id;
   if (!userID) {
@@ -189,10 +162,10 @@ app.post("/logout", (req, res) => {
     res.status(403).render("error", templateVars);
     return;
   }
-  req.session.user_id = null;
+  delete req.session.user_id;
   res.redirect("/urls");
 });
-
+//DELETE
 app.delete("/urls/:id", (req, res) => {
   const userID = req.session.user_id;
   const id = req.params.id;
@@ -211,7 +184,7 @@ app.delete("/urls/:id", (req, res) => {
   delete urlDatabase[id];
   res.redirect("/urls");
 });
-
+//EDIT
 app.put("/urls/:id", (req, res) => {
   const userID = req.session.user_id;
   const id = req.params.id;
@@ -231,7 +204,7 @@ app.put("/urls/:id", (req, res) => {
   urlDatabase[id].longURL = newURL;
   res.redirect("/urls");
 });
-
+//ADD
 app.post("/register", (req, res) => {
   const username = req.body.username;
   const email = req.body.email;
@@ -256,7 +229,7 @@ app.post("/register", (req, res) => {
   req.session.user_id = userID;
   res.redirect('/urls');
 });
-
+//EDIT
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
