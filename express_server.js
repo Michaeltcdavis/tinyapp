@@ -162,7 +162,7 @@ app.post("/logout", (req, res) => {
     res.status(403).render("error", templateVars);
     return;
   }
-  delete req.session.user_id;
+  req.session = null;
   res.redirect("/urls");
 });
 //DELETE
